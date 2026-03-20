@@ -71,7 +71,7 @@
           <p class="text-xs text-soft">免费实用查询工具集合</p>
         </div>
       </div>
-      <span class="badge px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" id="tool-count">2 个工具</span>
+      <span class="badge px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" id="tool-count">3 个工具</span>
       <button id="theme-toggle" class="theme-btn px-3 py-1 rounded-full text-sm font-bold" onclick="toggleTheme()">🌙</button>
     </div>
   </header>
@@ -90,6 +90,11 @@
         <h2 class="font-bold text-base">人均 GDP 查询</h2>
         <p class="text-xs text-soft mt-2">查询全球国家/地区的人均 GDP（美元），数据来源：世界银行 2023</p>
       </div>
+      <div class="tool-card glass rounded-2xl p-6" data-tool="ip-risk" onclick="switchTool('ip-risk')">
+        <div class="text-3xl mb-3">🛡️</div>
+        <h2 class="font-bold text-base">IP 智能风控查询</h2>
+        <p class="text-xs text-soft mt-2">IP 归属地、代理检测、ASN 分析及风险评分</p>
+      </div>
       <div class="tool-card glass rounded-2xl p-6 opacity-50 border-dashed border-2" style="cursor:default; pointer-events:none;">
         <div class="text-3xl mb-3">🔜</div>
         <h2 class="font-bold text-base">更多工具</h2>
@@ -97,8 +102,8 @@
       </div>
     </div>
 
-    <!-- 查询区域 -->
-    <div class="glass rounded-3xl p-8">
+    <!-- 查询区域 (区号/GDP) -->
+    <div class="glass rounded-3xl p-8" id="data-tool-area">
       <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <h3 class="font-black text-xl" id="tool-title">📞 国家区号查询</h3>
         <input id="search" type="text" placeholder="输入国家名、英文名、区号或简码(CN/CHN)…" class="flex-1 w-full sm:w-auto rounded-xl px-5 py-3 text-sm text-white placeholder-white/30" autocomplete="off">
@@ -113,6 +118,11 @@
       </div>
 
       <div id="results" class="max-h-[60vh] overflow-y-auto space-y-1"></div>
+    </div>
+
+    <!-- IP 风控工具 (iframe) -->
+    <div id="ip-tool-area" class="glass rounded-3xl overflow-hidden" style="display:none;">
+      <iframe id="ip-iframe" src="" style="width:100%;height:80vh;border:none;border-radius:1.5rem;" loading="lazy"></iframe>
     </div>
   </main>
 
@@ -625,8 +635,19 @@
       const title = document.getElementById('tool-title');
       const col3 = document.getElementById('col3-header');
       const col4 = document.getElementById('col4-header');
+      const dataArea = document.getElementById('data-tool-area');
+      const ipArea = document.getElementById('ip-tool-area');
 
-      if (tool === 'phone-code') {
+      if (tool === 'ip-risk') {
+        dataArea.style.display = 'none';
+        ipArea.style.display = 'block';
+        const iframe = document.getElementById('ip-iframe');
+        if (!iframe.src || iframe.src === location.href) iframe.src = 'https://cipda.pages.dev/';
+      } else {
+        dataArea.style.display = 'block';
+        ipArea.style.display = 'none';
+
+        if (tool === 'phone-code') {
         title.textContent = '📞 国家区号查询';
         search.placeholder = '输入国家名、英文名、区号或简码(CN/CHN)…';
         col3.textContent = '区号';
@@ -638,8 +659,9 @@
         col4.textContent = '英文名';
       }
 
-      search.value = '';
-      render('');
+        search.value = '';
+        render('');
+      } // end else (non-ip tools)
     }
 
     function render(query) {
