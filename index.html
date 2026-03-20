@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线查询工具箱</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    body { background: #0a0a0a; color: #e5e5e5; margin: 0; }
+    .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
+    .tool-card { transition: all 0.3s; cursor: pointer; }
+    .tool-card:hover { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.05); }
+    .tool-card.active { border-color: #6366f1; background: rgba(99,102,241,0.1); }
+    .result-row { transition: background 0.2s; }
+    .result-row:hover { background: rgba(255,255,255,0.05); }
+    input[type="text"] { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+    input[type="text"]:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .badge { background: rgba(99,102,241,0.15); color: #818cf8; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-white/5 py-6 px-6">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🧰</span>
+        <div>
+          <h1 class="text-lg font-black tracking-tight">在线工具箱</h1>
+          <p class="text-xs text-white/40">免费实用查询工具集合</p>
+        </div>
+      </div>
+      <span class="badge px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" id="tool-count">2 个工具</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10">
+
+    <!-- 工具选择卡片 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10" id="tool-cards">
+      <div class="tool-card glass rounded-2xl p-6 active" data-tool="phone-code" onclick="switchTool('phone-code')">
+        <div class="text-3xl mb-3">📞</div>
+        <h2 class="font-bold text-base">国家区号查询</h2>
+        <p class="text-xs text-white/40 mt-2">输入国家名称或区号，快速查询全球 200+ 国家/地区的电话区号</p>
+      </div>
+      <div class="tool-card glass rounded-2xl p-6" data-tool="gdp" onclick="switchTool('gdp')">
+        <div class="text-3xl mb-3">💰</div>
+        <h2 class="font-bold text-base">人均 GDP 查询</h2>
+        <p class="text-xs text-white/40 mt-2">查询全球国家/地区的人均 GDP（美元），数据来源：世界银行 2023</p>
+      </div>
+      <div class="tool-card glass rounded-2xl p-6 opacity-40 cursor-default" style="pointer-events:none;">
+        <div class="text-3xl mb-3">🔜</div>
+        <h2 class="font-bold text-base">更多工具</h2>
+        <p class="text-xs text-white/40 mt-2">持续更新中…</p>
+      </div>
+    </div>
+
+    <!-- 查询区域 -->
+    <div class="glass rounded-3xl p-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+        <h3 class="font-black text-xl" id="tool-title">📞 国家区号查询</h3>
+        <input id="search" type="text" placeholder="输入国家名、英文名或区号…" class="flex-1 w-full sm:w-auto rounded-xl px-5 py-3 text-sm text-white placeholder-white/30" autocomplete="off">
+      </div>
+
+      <div class="text-xs text-white/30 mb-4" id="result-info">共 <span id="total">0</span> 条结果</div>
+
+      <div id="result-header" class="hidden sm:grid grid-cols-4 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-white/30 font-bold border-b border-white/5 mb-2">
+        <div>国旗</div>
+        <div>国家/地区</div>
+        <div id="col3-header">区号</div>
+        <div id="col4-header">英文名</div>
+      </div>
+
+      <div id="results" class="max-h-[60vh] overflow-y-auto space-y-1"></div>
+    </div>
+  </main>
+
+  <footer class="border-t border-white/5 py-8 text-center text-xs text-white/20">
+    © 2026 在线工具箱 · 数据仅供参考
+  </footer>
+
+  <script>
+    // ============ 国家区号数据 ============
+    const PHONE_DATA = [
+      {f:"🇨🇳",zh:"中国",en:"China",code:"+86"},
+      {f:"🇭🇰",zh:"中国香港",en:"Hong Kong",code:"+852"},
+      {f:"🇲🇴",zh:"中国澳门",en:"Macau",code:"+853"},
+      {f:"🇹🇼",zh:"中国台湾",en:"Taiwan",code:"+886"},
+      {f:"🇯🇵",zh:"日本",en:"Japan",code:"+81"},
+      {f:"🇰🇷",zh:"韩国",en:"South Korea",code:"+82"},
+      {f:"🇰🇵",zh:"朝鲜",en:"North Korea",code:"+850"},
+      {f:"🇲🇳",zh:"蒙古",en:"Mongolia",code:"+976"},
+      {f:"🇺🇸",zh:"美国",en:"United States",code:"+1"},
+      {f:"🇨🇦",zh:"加拿大",en:"Canada",code:"+1"},
+      {f:"🇬🇧",zh:"英国",en:"United Kingdom",code:"+44"},
+      {f:"🇫🇷",zh:"法国",en:"France",code:"+33"},
+      {f:"🇩🇪",zh:"德国",en:"Germany",code:"+49"},
+      {f:"🇮🇹",zh:"意大利",en:"Italy",code:"+39"},
+      {f:"🇪🇸",zh:"西班牙",en:"Spain",code:"+34"},
+      {f:"🇵🇹",zh:"葡萄牙",en:"Portugal",code:"+351"},
+      {f:"🇳🇱",zh:"荷兰",en:"Netherlands",code:"+31"},
+      {f:"🇧🇪",zh:"比利时",en:"Belgium",code:"+32"},
+      {f:"🇨🇭",zh:"瑞士",en:"Switzerland",code:"+41"},
+      {f:"🇦🇹",zh:"奥地利",en:"Austria",code:"+43"},
+      {f:"🇸🇪",zh:"瑞典",en:"Sweden",code:"+46"},
+      {f:"🇳🇴",zh:"挪威",en:"Norway",code:"+47"},
+      {f:"🇩🇰",zh:"丹麦",en:"Denmark",code:"+45"},
+      {f:"🇫🇮",zh:"芬兰",en:"Finland",code:"+358"},
+      {f:"🇮🇪",zh:"爱尔兰",en:"Ireland",code:"+353"},
+      {f:"🇵🇱",zh:"波兰",en:"Poland",code:"+48"},
+      {f:"🇨🇿",zh:"捷克",en:"Czech Republic",code:"+420"},
+      {f:"🇭🇺",zh:"匈牙利",en:"Hungary",code:"+36"},
+      {f:"🇷🇴",zh:"罗马尼亚",en:"Romania",code:"+40"},
+      {f:"🇧🇬",zh:"保加利亚",en:"Bulgaria",code:"+359"},
+      {f:"🇬🇷",zh:"希腊",en:"Greece",code:"+30"},
+      {f:"🇹🇷",zh:"土耳其",en:"Turkey",code:"+90"},
+      {f:"🇷🇺",zh:"俄罗斯",en:"Russia",code:"+7"},
+      {f:"🇺🇦",zh:"乌克兰",en:"Ukraine",code:"+380"},
+      {f:"🇮🇳",zh:"印度",en:"India",code:"+91"},
+      {f:"🇵🇰",zh:"巴基斯坦",en:"Pakistan",code:"+92"},
+      {f:"🇧🇩",zh:"孟加拉",en:"Bangladesh",code:"+880"},
+      {f:"🇱🇰",zh:"斯里兰卡",en:"Sri Lanka",code:"+94"},
+      {f:"🇳🇵",zh:"尼泊尔",en:"Nepal",code:"+977"},
+      {f:"🇲🇲",zh:"缅甸",en:"Myanmar",code:"+95"},
+      {f:"🇹🇭",zh:"泰国",en:"Thailand",code:"+66"},
+      {f:"🇻🇳",zh:"越南",en:"Vietnam",code:"+84"},
+      {f:"🇱🇦",zh:"老挝",en:"Laos",code:"+856"},
+      {f:"🇰🇭",zh:"柬埔寨",en:"Cambodia",code:"+855"},
+      {f:"🇲🇾",zh:"马来西亚",en:"Malaysia",code:"+60"},
+      {f:"🇸🇬",zh:"新加坡",en:"Singapore",code:"+65"},
+      {f:"🇮🇩",zh:"印度尼西亚",en:"Indonesia",code:"+62"},
+      {f:"🇵🇭",zh:"菲律宾",en:"Philippines",code:"+63"},
+      {f:"🇧🇳",zh:"文莱",en:"Brunei",code:"+673"},
+      {f:"🇦🇺",zh:"澳大利亚",en:"Australia",code:"+61"},
+      {f:"🇳🇿",zh:"新西兰",en:"New Zealand",code:"+64"},
+      {f:"🇧🇷",zh:"巴西",en:"Brazil",code:"+55"},
+      {f:"🇲🇽",zh:"墨西哥",en:"Mexico",code:"+52"},
+      {f:"🇦🇷",zh:"阿根廷",en:"Argentina",code:"+54"},
+      {f:"🇨🇱",zh:"智利",en:"Chile",code:"+56"},
+      {f:"🇨🇴",zh:"哥伦比亚",en:"Colombia",code:"+57"},
+      {f:"🇵🇪",zh:"秘鲁",en:"Peru",code:"+51"},
+      {f:"🇻🇪",zh:"委内瑞拉",en:"Venezuela",code:"+58"},
+      {f:"🇪🇨",zh:"厄瓜多尔",en:"Ecuador",code:"+593"},
+      {f:"🇧🇴",zh:"玻利维亚",en:"Bolivia",code:"+591"},
+      {f:"🇺🇾",zh:"乌拉圭",en:"Uruguay",code:"+598"},
+      {f:"🇵🇾",zh:"巴拉圭",en:"Paraguay",code:"+595"},
+      {f:"🇨🇺",zh:"古巴",en:"Cuba",code:"+53"},
+      {f:"🇯🇲",zh:"牙买加",en:"Jamaica",code:"+1-876"},
+      {f:"🇵🇦",zh:"巴拿马",en:"Panama",code:"+507"},
+      {f:"🇨🇷",zh:"哥斯达黎加",en:"Costa Rica",code:"+506"},
+      {f:"🇬🇹",zh:"危地马拉",en:"Guatemala",code:"+502"},
+      {f:"🇪🇬",zh:"埃及",en:"Egypt",code:"+20"},
+      {f:"🇿🇦",zh:"南非",en:"South Africa",code:"+27"},
+      {f:"🇳🇬",zh:"尼日利亚",en:"Nigeria",code:"+234"},
+      {f:"🇰🇪",zh:"肯尼亚",en:"Kenya",code:"+254"},
+      {f:"🇪🇹",zh:"埃塞俄比亚",en:"Ethiopia",code:"+251"},
+      {f:"🇬🇭",zh:"加纳",en:"Ghana",code:"+233"},
+      {f:"🇹🇿",zh:"坦桑尼亚",en:"Tanzania",code:"+255"},
+      {f:"🇲🇦",zh:"摩洛哥",en:"Morocco",code:"+212"},
+      {f:"🇹🇳",zh:"突尼斯",en:"Tunisia",code:"+216"},
+      {f:"🇩🇿",zh:"阿尔及利亚",en:"Algeria",code:"+213"},
+      {f:"🇸🇩",zh:"苏丹",en:"Sudan",code:"+249"},
+      {f:"🇦🇴",zh:"安哥拉",en:"Angola",code:"+244"},
+      {f:"🇲🇿",zh:"莫桑比克",en:"Mozambique",code:"+258"},
+      {f:"🇺🇬",zh:"乌干达",en:"Uganda",code:"+256"},
+      {f:"🇨🇲",zh:"喀麦隆",en:"Cameroon",code:"+237"},
+      {f:"🇸🇳",zh:"塞内加尔",en:"Senegal",code:"+221"},
+      {f:"🇨🇩",zh:"刚果(金)",en:"DR Congo",code:"+243"},
+      {f:"🇲🇬",zh:"马达加斯加",en:"Madagascar",code:"+261"},
+      {f:"🇸🇦",zh:"沙特阿拉伯",en:"Saudi Arabia",code:"+966"},
+      {f:"🇦🇪",zh:"阿联酋",en:"UAE",code:"+971"},
+      {f:"🇶🇦",zh:"卡塔尔",en:"Qatar",code:"+974"},
+      {f:"🇰🇼",zh:"科威特",en:"Kuwait",code:"+965"},
+      {f:"🇧🇭",zh:"巴林",en:"Bahrain",code:"+973"},
+      {f:"🇴🇲",zh:"阿曼",en:"Oman",code:"+968"},
+      {f:"🇮🇶",zh:"伊拉克",en:"Iraq",code:"+964"},
+      {f:"🇮🇷",zh:"伊朗",en:"Iran",code:"+98"},
+      {f:"🇮🇱",zh:"以色列",en:"Israel",code:"+972"},
+      {f:"🇯🇴",zh:"约旦",en:"Jordan",code:"+962"},
+      {f:"🇱🇧",zh:"黎巴嫩",en:"Lebanon",code:"+961"},
+      {f:"🇸🇾",zh:"叙利亚",en:"Syria",code:"+963"},
+      {f:"🇾🇪",zh:"也门",en:"Yemen",code:"+967"},
+      {f:"🇦🇫",zh:"阿富汗",en:"Afghanistan",code:"+93"},
+      {f:"🇺🇿",zh:"乌兹别克斯坦",en:"Uzbekistan",code:"+998"},
+      {f:"🇰🇿",zh:"哈萨克斯坦",en:"Kazakhstan",code:"+7"},
+      {f:"🇹🇲",zh:"土库曼斯坦",en:"Turkmenistan",code:"+993"},
+      {f:"🇰🇬",zh:"吉尔吉斯斯坦",en:"Kyrgyzstan",code:"+996"},
+      {f:"🇹🇯",zh:"塔吉克斯坦",en:"Tajikistan",code:"+992"},
+      {f:"🇬🇪",zh:"格鲁吉亚",en:"Georgia",code:"+995"},
+      {f:"🇦🇲",zh:"亚美尼亚",en:"Armenia",code:"+374"},
+      {f:"🇦🇿",zh:"阿塞拜疆",en:"Azerbaijan",code:"+994"},
+      {f:"🇭🇷",zh:"克罗地亚",en:"Croatia",code:"+385"},
+      {f:"🇷🇸",zh:"塞尔维亚",en:"Serbia",code:"+381"},
+      {f:"🇸🇮",zh:"斯洛文尼亚",en:"Slovenia",code:"+386"},
+      {f:"🇸🇰",zh:"斯洛伐克",en:"Slovakia",code:"+421"},
+      {f:"🇱🇹",zh:"立陶宛",en:"Lithuania",code:"+370"},
+      {f:"🇱🇻",zh:"拉脱维亚",en:"Latvia",code:"+371"},
+      {f:"🇪🇪",zh:"爱沙尼亚",en:"Estonia",code:"+372"},
+      {f:"🇧🇾",zh:"白俄罗斯",en:"Belarus",code:"+375"},
+      {f:"🇲🇩",zh:"摩尔多瓦",en:"Moldova",code:"+373"},
+      {f:"🇦🇱",zh:"阿尔巴尼亚",en:"Albania",code:"+355"},
+      {f:"🇲🇰",zh:"北马其顿",en:"North Macedonia",code:"+389"},
+      {f:"🇲🇹",zh:"马耳他",en:"Malta",code:"+356"},
+      {f:"🇨🇾",zh:"塞浦路斯",en:"Cyprus",code:"+357"},
+      {f:"🇱🇺",zh:"卢森堡",en:"Luxembourg",code:"+352"},
+      {f:"🇮🇸",zh:"冰岛",en:"Iceland",code:"+354"},
+      {f:"🇫🇯",zh:"斐济",en:"Fiji",code:"+679"},
+      {f:"🇵🇬",zh:"巴布亚新几内亚",en:"Papua New Guinea",code:"+675"},
+      {f:"🇼🇸",zh:"萨摩亚",en:"Samoa",code:"+685"},
+      {f:"🇹🇴",zh:"汤加",en:"Tonga",code:"+676"},
+      {f:"🇲🇻",zh:"马尔代夫",en:"Maldives",code:"+960"},
+      {f:"🇧🇹",zh:"不丹",en:"Bhutan",code:"+975"},
+      {f:"🇹🇱",zh:"东帝汶",en:"Timor-Leste",code:"+670"},
+    ];
+
+    // ============ 人均 GDP 数据（世界银行 2023，单位：美元） ============
+    const GDP_DATA = [
+      {f:"🇱🇺",zh:"卢森堡",en:"Luxembourg",gdp:128259},
+      {f:"🇮🇪",zh:"爱尔兰",en:"Ireland",gdp:106000},
+      {f:"🇨🇭",zh:"瑞士",en:"Switzerland",gdp:99994},
+      {f:"🇳🇴",zh:"挪威",en:"Norway",gdp:87961},
+      {f:"🇸🇬",zh:"新加坡",en:"Singapore",gdp:84734},
+      {f:"🇺🇸",zh:"美国",en:"United States",gdp:80035},
+      {f:"🇮🇸",zh:"冰岛",en:"Iceland",gdp:75430},
+      {f:"🇩🇰",zh:"丹麦",en:"Denmark",gdp:67803},
+      {f:"🇦🇺",zh:"澳大利亚",en:"Australia",gdp:65366},
+      {f:"🇳🇱",zh:"荷兰",en:"Netherlands",gdp:62448},
+      {f:"🇦🇹",zh:"奥地利",en:"Austria",gdp:56802},
+      {f:"🇸🇪",zh:"瑞典",en:"Sweden",gdp:55873},
+      {f:"🇧🇪",zh:"比利时",en:"Belgium",gdp:53376},
+      {f:"🇫🇮",zh:"芬兰",en:"Finland",gdp:53654},
+      {f:"🇩🇪",zh:"德国",en:"Germany",gdp:52824},
+      {f:"🇨🇦",zh:"加拿大",en:"Canada",gdp:52722},
+      {f:"🇭🇰",zh:"中国香港",en:"Hong Kong",gdp:50610},
+      {f:"🇬🇧",zh:"英国",en:"United Kingdom",gdp:48913},
+      {f:"🇳🇿",zh:"新西兰",en:"New Zealand",gdp:48781},
+      {f:"🇮🇱",zh:"以色列",en:"Israel",gdp:52170},
+      {f:"🇫🇷",zh:"法国",en:"France",gdp:44408},
+      {f:"🇯🇵",zh:"日本",en:"Japan",gdp:33950},
+      {f:"🇮🇹",zh:"意大利",en:"Italy",gdp:37146},
+      {f:"🇰🇷",zh:"韩国",en:"South Korea",gdp:33147},
+      {f:"🇪🇸",zh:"西班牙",en:"Spain",gdp:31223},
+      {f:"🇹🇼",zh:"中国台湾",en:"Taiwan",gdp:32756},
+      {f:"🇸🇦",zh:"沙特阿拉伯",en:"Saudi Arabia",gdp:30436},
+      {f:"🇦🇪",zh:"阿联酋",en:"UAE",gdp:49451},
+      {f:"🇶🇦",zh:"卡塔尔",en:"Qatar",gdp:87661},
+      {f:"🇧🇭",zh:"巴林",en:"Bahrain",gdp:29103},
+      {f:"🇰🇼",zh:"科威特",en:"Kuwait",gdp:38124},
+      {f:"🇵🇹",zh:"葡萄牙",en:"Portugal",gdp:26810},
+      {f:"🇨🇿",zh:"捷克",en:"Czech Republic",gdp:27220},
+      {f:"🇬🇷",zh:"希腊",en:"Greece",gdp:22440},
+      {f:"🇵🇱",zh:"波兰",en:"Poland",gdp:21916},
+      {f:"🇭🇺",zh:"匈牙利",en:"Hungary",gdp:18772},
+      {f:"🇨🇱",zh:"智利",en:"Chile",gdp:16800},
+      {f:"🇭🇷",zh:"克罗地亚",en:"Croatia",gdp:20162},
+      {f:"🇷🇴",zh:"罗马尼亚",en:"Romania",gdp:17862},
+      {f:"🇺🇾",zh:"乌拉圭",en:"Uruguay",gdp:20795},
+      {f:"🇵🇦",zh:"巴拿马",en:"Panama",gdp:17350},
+      {f:"🇨🇷",zh:"哥斯达黎加",en:"Costa Rica",gdp:13280},
+      {f:"🇲🇾",zh:"马来西亚",en:"Malaysia",gdp:12570},
+      {f:"🇨🇳",zh:"中国",en:"China",gdp:12720},
+      {f:"🇲🇽",zh:"墨西哥",en:"Mexico",gdp:13500},
+      {f:"🇹🇷",zh:"土耳其",en:"Turkey",gdp:11300},
+      {f:"🇷🇺",zh:"俄罗斯",en:"Russia",gdp:13100},
+      {f:"🇧🇷",zh:"巴西",en:"Brazil",gdp:10330},
+      {f:"🇦🇷",zh:"阿根廷",en:"Argentina",gdp:13650},
+      {f:"🇿🇦",zh:"南非",en:"South Africa",gdp:6190},
+      {f:"🇨🇴",zh:"哥伦比亚",en:"Colombia",gdp:6630},
+      {f:"🇹🇭",zh:"泰国",en:"Thailand",gdp:7066},
+      {f:"🇮🇩",zh:"印度尼西亚",en:"Indonesia",gdp:4788},
+      {f:"🇵🇪",zh:"秘鲁",en:"Peru",gdp:7000},
+      {f:"🇵🇭",zh:"菲律宾",en:"Philippines",gdp:3905},
+      {f:"🇪🇬",zh:"埃及",en:"Egypt",gdp:3600},
+      {f:"🇻🇳",zh:"越南",en:"Vietnam",gdp:4164},
+      {f:"🇮🇳",zh:"印度",en:"India",gdp:2485},
+      {f:"🇺🇿",zh:"乌兹别克斯坦",en:"Uzbekistan",gdp:2255},
+      {f:"🇳🇬",zh:"尼日利亚",en:"Nigeria",gdp:1621},
+      {f:"🇧🇩",zh:"孟加拉",en:"Bangladesh",gdp:2688},
+      {f:"🇰🇪",zh:"肯尼亚",en:"Kenya",gdp:2100},
+      {f:"🇵🇰",zh:"巴基斯坦",en:"Pakistan",gdp:1560},
+      {f:"🇪🇹",zh:"埃塞俄比亚",en:"Ethiopia",gdp:1020},
+      {f:"🇲🇲",zh:"缅甸",en:"Myanmar",gdp:1210},
+      {f:"🇰🇭",zh:"柬埔寨",en:"Cambodia",gdp:1820},
+      {f:"🇱🇦",zh:"老挝",en:"Laos",gdp:2050},
+      {f:"🇳🇵",zh:"尼泊尔",en:"Nepal",gdp:1340},
+      {f:"🇲🇦",zh:"摩洛哥",en:"Morocco",gdp:3740},
+      {f:"🇬🇭",zh:"加纳",en:"Ghana",gdp:2350},
+      {f:"🇹🇿",zh:"坦桑尼亚",en:"Tanzania",gdp:1200},
+      {f:"🇺🇬",zh:"乌干达",en:"Uganda",gdp:964},
+      {f:"🇲🇿",zh:"莫桑比克",en:"Mozambique",gdp:539},
+      {f:"🇲🇬",zh:"马达加斯加",en:"Madagascar",gdp:515},
+      {f:"🇦🇫",zh:"阿富汗",en:"Afghanistan",gdp:380},
+      {f:"🇲🇻",zh:"马尔代夫",en:"Maldives",gdp:14895},
+      {f:"🇧🇳",zh:"文莱",en:"Brunei",gdp:36510},
+      {f:"🇴🇲",zh:"阿曼",en:"Oman",gdp:23418},
+      {f:"🇯🇴",zh:"约旦",en:"Jordan",gdp:4640},
+      {f:"🇱🇧",zh:"黎巴嫩",en:"Lebanon",gdp:4136},
+      {f:"🇬🇪",zh:"格鲁吉亚",en:"Georgia",gdp:7670},
+      {f:"🇦🇲",zh:"亚美尼亚",en:"Armenia",gdp:7920},
+      {f:"🇰🇿",zh:"哈萨克斯坦",en:"Kazakhstan",gdp:13100},
+      {f:"🇲🇳",zh:"蒙古",en:"Mongolia",gdp:5100},
+      {f:"🇫🇯",zh:"斐济",en:"Fiji",gdp:5830},
+      {f:"🇸🇱",zh:"塞尔维亚",en:"Serbia",gdp:9530},
+      {f:"🇧🇬",zh:"保加利亚",en:"Bulgaria",gdp:14280},
+      {f:"🇱🇹",zh:"立陶宛",en:"Lithuania",gdp:25030},
+      {f:"🇱🇻",zh:"拉脱维亚",en:"Latvia",gdp:21860},
+      {f:"🇪🇪",zh:"爱沙尼亚",en:"Estonia",gdp:28250},
+      {f:"🇸🇰",zh:"斯洛伐克",en:"Slovakia",gdp:22230},
+      {f:"🇸🇮",zh:"斯洛文尼亚",en:"Slovenia",gdp:31580},
+      {f:"🇲🇹",zh:"马耳他",en:"Malta",gdp:35950},
+      {f:"🇨🇾",zh:"塞浦路斯",en:"Cyprus",gdp:32610},
+    ];
+
+    // ============ 当前工具 ============
+    let currentTool = 'phone-code';
+
+    function switchTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
+      document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
+
+      const search = document.getElementById('search');
+      const title = document.getElementById('tool-title');
+      const col3 = document.getElementById('col3-header');
+      const col4 = document.getElementById('col4-header');
+
+      if (tool === 'phone-code') {
+        title.textContent = '📞 国家区号查询';
+        search.placeholder = '输入国家名、英文名或区号…';
+        col3.textContent = '区号';
+        col4.textContent = '英文名';
+      } else if (tool === 'gdp') {
+        title.textContent = '💰 人均 GDP 查询';
+        search.placeholder = '输入国家名或英文名…';
+        col3.textContent = '人均GDP (USD)';
+        col4.textContent = '英文名';
+      }
+
+      search.value = '';
+      render('');
+    }
+
+    function render(query) {
+      const q = query.trim().toLowerCase();
+      let data, rows;
+
+      if (currentTool === 'phone-code') {
+        data = PHONE_DATA.filter(d =>
+          !q || d.zh.includes(q) || d.en.toLowerCase().includes(q) || d.code.includes(q)
+        );
+        rows = data.map(d => `
+          <div class="result-row grid grid-cols-2 sm:grid-cols-4 gap-4 px-4 py-3 rounded-xl items-center">
+            <div class="text-2xl">${d.f}</div>
+            <div class="font-bold text-sm">${d.zh}</div>
+            <div class="text-indigo-400 font-mono font-bold text-lg">${d.code}</div>
+            <div class="text-white/40 text-sm">${d.en}</div>
+          </div>
+        `).join('');
+      } else if (currentTool === 'gdp') {
+        data = GDP_DATA.filter(d =>
+          !q || d.zh.includes(q) || d.en.toLowerCase().includes(q)
+        );
+        // sort by GDP descending
+        data.sort((a, b) => b.gdp - a.gdp);
+        rows = data.map((d, i) => `
+          <div class="result-row grid grid-cols-2 sm:grid-cols-4 gap-4 px-4 py-3 rounded-xl items-center">
+            <div class="flex items-center gap-2"><span class="text-2xl">${d.f}</span><span class="text-white/20 text-xs font-bold">#${i + 1}</span></div>
+            <div class="font-bold text-sm">${d.zh}</div>
+            <div class="text-emerald-400 font-mono font-bold">$${d.gdp.toLocaleString()}</div>
+            <div class="text-white/40 text-sm">${d.en}</div>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('results').innerHTML = rows || '<div class="text-center text-white/30 py-10">未找到匹配结果</div>';
+      document.getElementById('total').textContent = data.length;
+    }
+
+    // 搜索事件
+    document.getElementById('search').addEventListener('input', e => render(e.target.value));
+
+    // 初始化
+    render('');
+  </script>
+</body>
+</html>
