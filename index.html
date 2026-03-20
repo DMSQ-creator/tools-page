@@ -78,28 +78,20 @@
 
   <main class="max-w-6xl mx-auto px-6 py-10">
 
-    <!-- 工具选择卡片 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10" id="tool-cards">
-      <div class="tool-card glass rounded-2xl p-6 active" data-tool="phone-code" onclick="switchTool('phone-code')">
-        <div class="text-3xl mb-3">📞</div>
-        <h2 class="font-bold text-base">国家区号查询</h2>
-        <p class="text-xs text-soft mt-2">输入国家名称或区号，快速查询全球 200+ 国家/地区的电话区号</p>
-      </div>
-      <div class="tool-card glass rounded-2xl p-6" data-tool="gdp" onclick="switchTool('gdp')">
-        <div class="text-3xl mb-3">💰</div>
-        <h2 class="font-bold text-base">人均 GDP 查询</h2>
-        <p class="text-xs text-soft mt-2">查询全球国家/地区的人均 GDP（美元），数据来源：世界银行 2023</p>
-      </div>
-      <div class="tool-card glass rounded-2xl p-6" data-tool="ip-risk" onclick="switchTool('ip-risk')">
-        <div class="text-3xl mb-3">🛡️</div>
-        <h2 class="font-bold text-base">IP 智能风控查询</h2>
-        <p class="text-xs text-soft mt-2">IP 归属地、代理检测、ASN 分析及风险评分</p>
-      </div>
-      <div class="tool-card glass rounded-2xl p-6 opacity-50 border-dashed border-2" style="cursor:default; pointer-events:none;">
-        <div class="text-3xl mb-3">🔜</div>
-        <h2 class="font-bold text-base">更多工具</h2>
-        <p class="text-xs text-soft mt-2">持续更新中…</p>
-      </div>
+    <!-- 工具选择标签栏 -->
+    <div class="flex flex-wrap gap-2 mb-8" id="tool-cards">
+      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2 active" data-tool="phone-code" onclick="switchTool('phone-code')">
+        <span class="text-lg">📞</span><span class="font-bold text-sm">国家区号</span>
+      </button>
+      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2" data-tool="gdp" onclick="switchTool('gdp')">
+        <span class="text-lg">💰</span><span class="font-bold text-sm">人均 GDP</span>
+      </button>
+      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2" data-tool="ip-risk" onclick="switchTool('ip-risk')">
+        <span class="text-lg">🛡️</span><span class="font-bold text-sm">IP 风控查询</span>
+      </button>
+      <span class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2 opacity-40 border-dashed border" style="cursor:default; pointer-events:none;">
+        <span class="text-lg">🔜</span><span class="font-bold text-sm text-soft">更多工具</span>
+      </span>
     </div>
 
     <!-- 查询区域 (区号/GDP) -->
