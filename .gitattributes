@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Preserve upstream bytes: hashes and offline reconstruction depend on exact bytes.
+data/raw/* -text -whitespace

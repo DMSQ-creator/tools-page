@@ -1,0 +1,10 @@
+{
+  "name": "tools-page",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/app.test.cjs",
+    "test:data": "python -m unittest discover -s tests -p test_data.py",
+    "test:browser": "node tests/browser-smoke.cjs",
+    "update:data": "python scripts/update_data.py"
+  }
+}
