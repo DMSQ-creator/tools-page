@@ -1,12 +1,40 @@
 # 在线查询工具箱
 
-国家/地区呼叫码、人均 GDP 查询及第三方 IP 风控入口。保留静态站点，不需要后端或构建流程。
+国家/地区呼叫码、人均 GDP 查询及原生 IP 风控工具。前端保持静态托管，无构建流程；IP 查询复用站主现有 Cloudflare 接口。
 
 ## 预览与部署
 
-直接打开 [首页](<index.html>) 即可查询本地快照；原有 Tailwind CDN、Google Fonts 和第三方 IP 页面仍需联网。没有另起服务或改变现有域名。
+直接打开 [首页](<index.html>) 即可查询本地快照。界面使用本地 CSS 与系统字体，不再依赖 Tailwind CDN 或 Google Fonts；只有 IP 查询接口需要联网。没有另起服务或改变现有域名。
 
-部署到 GitHub Pages 时，必须一起上传 [首页](<index.html>)、[交互脚本](<app.js>) 和 [浏览器数据快照](<data/catalog.js>)，保持相对路径不变，并保留现有 [域名配置](<CNAME>)。仅修改本地不会更新线上；审核改动后提交、推送，由仓库 GitHub Pages 配置部署。数据更新脚本不配置定时任务，也不会自行提交或推送。
+部署到 GitHub Pages 时，必须一起上传 [首页](<index.html>)、[交互脚本](<app.js>)、[IP 客户端](<ip.js>)、[样式](<styles.css>)、[工具注册表](<tools.js>) 和 [浏览器数据快照](<data/catalog.js>)，保持相对路径不变，并保留现有 [域名配置](<CNAME>)。仅修改本地不会更新线上；审核改动后提交、推送，由仓库 GitHub Pages 配置部署。数据更新脚本不配置定时任务，也不会自行提交或推送。
+
+## 工具工作台
+
+桌面提供可收起侧栏；手机通过工具选择面板切换，支持按名称、分类、关键词搜索。工具独立链接为 `#/phone-code`、`#/gdp`、`#/ip-risk`、`#/local-time`、`#/utm-builder`，支持直接访问、刷新和浏览器前进后退。同一页面会话内保留各工具查询条件；主题和侧栏状态在存储可用时记住。
+
+工具名称、图标、简介、分类、关键词和入口统一放在 [工具注册表](<tools.js>)。增加同类型工具时可复用渲染能力；新增转换器等不同交互仍需在 [应用逻辑](<app.js>) 增加相应渲染器和测试，注册表不代替工具本身的实现。当前仅列真实可用工具，不展示占位项。
+
+结果采用中英文同列、数值右对齐的紧凑排版；特殊说明按需展开，页面自然滚动，来源仍只显示在底部。
+
+## 当地时间与 UTM
+
+- 当地时间使用浏览器 Intl / IANA 时区规则，以设备时钟为准；提供 41 个常用城市，支持城市/英文国家/时区筛选、基准城市选择和 2000–2100 年指定当地日期换算。不是国家级统一时差表，也不覆盖全部城市。
+- 同一瞬间按各城市当地规则显示日期、UTC 偏移和与基准的差值，包含夏令时及非整小时时差。春季跳时中不存在的当地时刻、秋季回拨中重复出现的时刻均拒绝猜测并提示。工作时段仅为周一至周五 09:00–18:00 参考，不计节假日。
+- 时区规则由浏览器/系统维护，未来政策变动后应更新浏览器；本工具不能校正错误设备时间。
+- UTM 工具在本地处理 URL，不访问目标地址、不上传、不持久存储。本站要求 source、medium、campaign 三项，term/content 可选。保留其他查询参数和片段，替换原 UTM 参数；空可选项清除旧值。URL 凭据和非 HTTP(S) 协议被拒绝。
+- 不要在参数中填姓名、邮箱、电话等个人信息；参数会出现在链接、分析数据和访问日志中。UTM 不等于自动归因，落地页和表单系统必须实际采集参数。
+- 部署时同步包含 [时间逻辑](<clock.js>)、[时间样式](<clock.css>)、[UTM 逻辑](<utm.js>)、[UTM 样式](<utm.css>)，不能只更新首页。
+
+## 原生 IP 查询
+
+不嵌入 iframe，不加载原第三方页面。使用站主已有接口 `https://ip.heiqia.eu.org/`（实测允许跨域），无需更改 Cloudflare 配置。入口在工具注册表中管理。
+
+- 支持 IPv4 / IPv6 和“我的 IP”（当前网络出口），仅点击按钮时发送请求，不自动收集，不持久存储查询结果。
+- 浏览器会向接口发送目标 IP，接口也能看到查询者网络出口；请求不携带 Cookie，并禁止缓存。
+- 15 秒超时，重复提交保护，网络错误/429/无效响应有明确提示；失败隐藏旧结果，避免误认。
+- 评分、等级、代理/VPN/Tor 标记与标签按接口返回展示，缺失显示未知，不推导“信用良好”或绝对安全。地理位置为近似值。
+- 不使用接口的 `config.map_key`，不加载地图 SDK；坐标有效时提供 OpenStreetMap 外链，只有点击才打开。现有接口返回地图 Key 的来源限制应在后端单独检查，前端无法隐藏接口原始响应。
+- 浏览器回归测试默认使用明确标记的模拟 IP 响应，不消耗接口额度；设置环境变量 `LIVE_IP=1` 后会向该接口发起一次 `1.1.1.1` 实际查询，外部网络失败会导致该可选测试失败。
 
 ## 本次数据维护
 
@@ -27,7 +55,7 @@ Python 3.10+，只用标准库，不需要安装依赖。在仓库根目录执�
 ```sh
 python scripts/update_data.py
 python -m unittest discover -s tests -p test_data.py -v
-node --test tests/app.test.cjs
+node --test tests/app.test.cjs tests/ip.test.cjs tests/clock.test.cjs tests/utm.test.cjs
 ```
 
 更新脚本获取最近六个完整日历年，保存原始响应和 SHA-256，验证后同时生成 [JSON 快照](<data/catalog.json>) 和 [JS 快照](<data/catalog.js>)。请求/解析/完整性检查失败时保留旧快照，不用空数据覆盖。更新完成后先查看差异，再提交发布。
@@ -46,7 +74,7 @@ python scripts/update_data.py --offline
 Node.js 22+；不需要 npm install：
 
 ```sh
-node --test tests/app.test.cjs
+node --test tests/app.test.cjs tests/ip.test.cjs tests/clock.test.cjs tests/utm.test.cjs
 python -m unittest discover -s tests -p test_data.py -v
 ```
 

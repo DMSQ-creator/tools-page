@@ -3,144 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="查询国家电话区号、人均 GDP 与 IP 风控信息。">
   <title>在线查询工具箱</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-    * { font-family: 'Inter', system-ui, sans-serif; }
-
-    /* 亮色主题（默认） */
-    :root {
-      --bg: #f5f5f7; --text: #1a1a2e; --text-soft: #666; --text-muted: #999;
-      --glass-bg: rgba(255,255,255,0.8); --glass-border: rgba(0,0,0,0.08);
-      --card-hover-bg: rgba(99,102,241,0.05); --card-active-bg: rgba(99,102,241,0.1);
-      --card-active-border: #6366f1;
-      --input-bg: rgba(0,0,0,0.04); --input-border: rgba(0,0,0,0.1);
-      --row-hover: rgba(0,0,0,0.03);
-      --badge-bg: rgba(99,102,241,0.1); --badge-color: #6366f1;
-      --scrollbar: rgba(0,0,0,0.1);
-      --accent-green: #059669; --accent-indigo: #4f46e5;
-    }
-
-    /* 暗色主题 */
-    [data-theme="dark"] {
-      --bg: #0f0f1a; --text: #e5e5e5; --text-soft: #aaa; --text-muted: #666;
-      --glass-bg: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.08);
-      --card-hover-bg: rgba(99,102,241,0.05); --card-active-bg: rgba(99,102,241,0.1);
-      --card-active-border: #6366f1;
-      --input-bg: rgba(255,255,255,0.06); --input-border: rgba(255,255,255,0.1);
-      --row-hover: rgba(255,255,255,0.05);
-      --badge-bg: rgba(99,102,241,0.15); --badge-color: #818cf8;
-      --scrollbar: rgba(255,255,255,0.1);
-      --accent-green: #34d399; --accent-indigo: #818cf8;
-    }
-
-    body { background: var(--bg); color: var(--text); margin: 0; transition: background 0.3s, color 0.3s; }
-    .glass { background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(20px); }
-    .tool-card { transition: all 0.3s; cursor: pointer; }
-    .tool-card:hover { border-color: rgba(99,102,241,0.5); background: var(--card-hover-bg); }
-    .tool-card.active { border-color: var(--card-active-border); background: var(--card-active-bg); }
-    .result-row { transition: background 0.2s; }
-    .result-row:hover { background: var(--row-hover); }
-    input[type="text"] { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); }
-    input[type="text"]::placeholder { color: var(--text-muted); }
-    input[type="text"]:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
-    .badge { background: var(--badge-bg); color: var(--badge-color); }
-    .text-soft { color: var(--text-soft); }
-    .text-muted { color: var(--text-muted); }
-    .accent-green { color: var(--accent-green); }
-    .accent-indigo { color: var(--accent-indigo); }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
-
-    .theme-btn { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); cursor: pointer; transition: all 0.2s; }
-    .theme-btn:hover { border-color: #6366f1; }
-    [hidden] { display: none !important; }
-    select { min-width: 0; max-width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--input-border); border-radius: .6rem; padding: .5rem; }
-    .result-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); overflow-wrap: anywhere; }
-    .country-cell { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-    #data-meta { line-height: 1.8; }
-    @media (max-width: 640px) {
-      #data-tool-area { padding: 1rem; }
-      .result-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .5rem; padding: .75rem .5rem; }
-      .english-cell { grid-column: 1 / -1; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="clock.css">
+  <link rel="stylesheet" href="utm.css">
 </head>
-<body class="min-h-screen">
-
-  <!-- Header -->
-  <header class="border-b border-white/5 py-6 px-6">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">🧰</span>
-        <div>
-          <h1 class="text-lg font-black tracking-tight">在线工具箱</h1>
-          <p class="text-xs text-soft">免费实用查询工具集合</p>
-        </div>
-      </div>
-      <span class="badge px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" id="tool-count">3 个工具</span>
-      <button id="theme-toggle" class="theme-btn px-3 py-1 rounded-full text-sm font-bold" onclick="toggleTheme()">🌙</button>
+<body>
+  <a class="skip-link" href="#main-content">跳到工具内容</a>
+  <header class="site-header">
+    <a class="brand" href="#/phone-code" aria-label="在线工具箱首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M4 12h16m-10-2v4m4-4v4"/></svg>
+      </span>
+      <span>在线工具箱</span>
+    </a>
+    <div class="header-actions">
+      <button id="tool-search-open" class="tool-search-button" type="button" aria-haspopup="dialog" aria-controls="tool-dialog">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        <span>查找工具</span>
+      </button>
+      <button id="theme-toggle" class="icon-button" type="button" onclick="toggleTheme()" aria-label="切换深色模式" title="切换主题">🌙</button>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-6 py-10">
-
-    <!-- 工具选择标签栏 -->
-    <div class="flex flex-wrap gap-2 mb-8" id="tool-cards">
-      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2 active" data-tool="phone-code" onclick="switchTool('phone-code')">
-        <span class="text-lg">📞</span><span class="font-bold text-sm">国家区号</span>
-      </button>
-      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2" data-tool="gdp" onclick="switchTool('gdp')">
-        <span class="text-lg">💰</span><span class="font-bold text-sm">人均 GDP</span>
-      </button>
-      <button class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2" data-tool="ip-risk" onclick="switchTool('ip-risk')">
-        <span class="text-lg">🛡️</span><span class="font-bold text-sm">IP 风控查询</span>
-      </button>
-      <span class="tool-card glass rounded-xl px-4 py-3 flex items-center gap-2 opacity-40 border-dashed border" style="cursor:default; pointer-events:none;">
-        <span class="text-lg">🔜</span><span class="font-bold text-sm text-soft">更多工具</span>
-      </span>
-    </div>
-
-    <!-- 查询区域 (区号/GDP) -->
-    <div class="glass rounded-3xl p-8" id="data-tool-area">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-        <h3 class="font-black text-xl" id="tool-title">📞 国家区号查询</h3>
-        <input id="search" aria-label="搜索国家、地区或代码" type="text" placeholder="输入国家名、英文名、区号或简码(CN/CHN)…" class="flex-1 w-full sm:w-auto rounded-xl px-5 py-3 text-sm" autocomplete="off">
+  <div class="workspace">
+    <aside id="sidebar" class="sidebar" aria-label="工具导航">
+      <div class="sidebar-heading">
+        <span class="sidebar-label">工具</span>
+        <button id="sidebar-toggle" class="icon-button sidebar-toggle" type="button" aria-label="收起侧栏" aria-expanded="true" aria-controls="tool-nav" title="收起侧栏">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m7-11-3 3 3 3"/></svg>
+        </button>
       </div>
+      <nav id="tool-nav" class="tool-nav" aria-label="选择工具"></nav>
+      <p class="sidebar-caption">简单查询，随手可用。</p>
+    </aside>
 
-      <div id="gdp-controls" class="flex flex-wrap items-center gap-3 mb-4 text-sm" hidden>
-        <label for="gdp-year">数据口径</label>
-        <select id="gdp-year"></select>
-      </div>
-      <p id="data-note" class="text-xs text-soft mb-4"></p>
-      <div class="text-xs text-muted mb-4" id="result-info" role="status" aria-live="polite">共 <span id="total">0</span> 条结果<span id="coverage"></span></div>
+    <div class="page-column">
+      <main id="main-content" class="main-content" tabindex="-1">
+        <button id="tool-picker" class="tool-picker" type="button" aria-haspopup="dialog" aria-controls="tool-dialog">选择工具 <span aria-hidden="true">⌄</span></button>
+        <div class="workspace-toolbar">
+          <div class="page-heading">
+            <h1 id="tool-title">国家区号查询</h1>
+            <details class="tool-help"><summary aria-label="工具使用说明">?</summary><p id="tool-description">查找国家与地区的国际电话区号。</p></details>
+          </div>
+          <div id="query-controls" class="query-controls">
+              <div class="search-field">
+                <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+                <input id="search" aria-label="搜索国家、地区或代码" type="search" placeholder="搜索国家、英文名、区号或简码…" autocomplete="off" spellcheck="false">
+                <button id="search-clear" class="icon-button search-clear" type="button" aria-label="清空搜索" title="清空搜索" hidden>×</button>
+              </div>
+              <div id="gdp-controls" class="gdp-controls" hidden>
+                <label for="gdp-year">数据口径</label>
+                <select id="gdp-year" aria-label="选择 GDP 年份或最新可用值"></select>
+              </div>
+            <div id="result-info" class="result-info" role="status" aria-live="polite"><span id="total">0</span> 条结果<span id="coverage"></span></div>
+          </div>
+          <form id="ip-form" class="ip-form" hidden>
+            <input id="ip-input" type="text" aria-label="IPv4 或 IPv6 地址" placeholder="输入 IPv4 / IPv6 地址…" autocomplete="off" spellcheck="false" maxlength="45">
+            <button id="ip-submit" class="primary-button" type="submit">查询</button>
+            <button id="ip-self" class="secondary-button" type="button">我的 IP</button>
+          </form>
+        </div>
+        <section id="data-tool-area" class="data-panel" aria-labelledby="tool-title">
+          <p id="data-note" class="data-note" hidden></p>
+          <div id="result-header" class="result-header" aria-hidden="true">
+            <div>国家 / 地区</div>
+            <div id="col3-header">国家呼叫码 / 地区前缀</div>
+          </div>
+          <div id="results" class="results">正在加载本地数据快照；若长时间未显示，请刷新页面。</div>
+          <noscript><p class="empty-state">请启用 JavaScript 后使用查询功能。</p></noscript>
+        </section>
 
-      <div id="result-header" class="hidden sm:grid grid-cols-3 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-muted font-bold border-b border-black/10 mb-2">
-        <div>国家/地区</div>
-        <div id="col3-header">区号</div>
-        <div id="col4-header">英文名</div>
-      </div>
+        <section id="ip-tool-area" class="ip-panel" aria-labelledby="tool-title" hidden>
+          <p id="ip-status" class="ip-status" role="status" aria-live="polite">输入 IP 地址开始查询，或点击“我的 IP”识别当前网络出口。</p>
+          <div id="ip-result" hidden></div>
+          <p class="ip-disclaimer">IP 归属地为近似位置；代理标记、评分与举报信息仅供参考，不代表个人身份或实际行为。点击查询后，目标 IP 与当前网络出口将发送至本站查询接口；不会自动查询。</p>
+        </section>
+        <section id="clock-tool-area" aria-labelledby="tool-title" hidden></section>
+        <section id="utm-tool-area" aria-labelledby="tool-title" hidden></section>
+      </main>
 
-      <div id="results" class="max-h-[60vh] overflow-y-auto space-y-1">正在加载本地数据快照；若长时间未显示，请刷新或检查数据文件是否完整。</div>
-      <noscript>请启用 JavaScript 后使用查询功能。</noscript>
+      <footer class="site-footer">
+        <p id="data-meta">数据来源：世界银行 / ITU 号码计划</p>
+        <div class="footer-bottom">
+          <p>© 2026 在线工具箱 · 仅供参考</p>
+          <p class="domain-support"><a href="https://dash.domain.digitalplat.org/signup?ref=SIVJoV29x4" target="_blank" rel="noopener noreferrer">DigitalPlat FreeDomain</a> 域名支持 · <a href="https://dash.domain.digitalplat.org/signup?ref=SIVJoV29x4" target="_blank" rel="noopener noreferrer">获取免费域名 ↗</a></p>
+        </div>
+      </footer>
     </div>
+  </div>
 
-    <!-- IP 风控工具 (iframe) -->
-    <div id="ip-tool-area" class="glass rounded-3xl overflow-hidden" style="display:none;">
-      <iframe id="ip-iframe" title="第三方 IP 风控查询" style="width:100%;height:80vh;border:none;border-radius:1.5rem;" loading="lazy"></iframe>
+  <dialog id="tool-dialog" class="tool-dialog" aria-labelledby="tool-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="tool-dialog-title">选择工具</h2>
+      <button id="dialog-close" class="icon-button" type="button" aria-label="关闭工具选择" title="关闭">×</button>
     </div>
-  </main>
-
-  <footer class="border-t border-white/5 py-8 px-6 text-center text-xs text-muted">
-    <p>© 2026 在线工具箱 · 仅供参考</p>
-    <p id="data-meta" class="max-w-6xl mx-auto mt-3">数据来源：世界银行 / ITU 号码计划</p>
-    <p class="mt-3 flex items-center justify-center gap-1">🌐 本网站由 <a href="https://dash.domain.digitalplat.org/signup?ref=SIVJoV29x4" target="_blank" class="accent-indigo font-semibold underline">DigitalPlat FreeDomain</a> 提供技术支持 · <a href="https://dash.domain.digitalplat.org/signup?ref=SIVJoV29x4" target="_blank" class="underline">获取免费域名 →</a></p>
-  </footer>
+    <div class="dialog-search">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="tool-search" type="search" aria-label="查找工具" placeholder="查找工具…" autocomplete="off" spellcheck="false">
+    </div>
+    <nav id="tool-options" class="tool-options" aria-label="工具查找结果"></nav>
+  </dialog>
 
   <script src="data/catalog.js"></script>
+  <script src="tools.js"></script>
+  <script src="ip.js"></script>
+  <script src="clock.js"></script>
+  <script src="utm.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

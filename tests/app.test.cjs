@@ -49,12 +49,15 @@ function mockPage(catalog, blockedStorage=false) {
   const elements = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, {value:'',textContent:'',innerHTML:'',style:{},attributes:{},dataset:{},hidden:false,
-      classList:{toggle(){}},listeners:{},setAttribute(k,v){this.attributes[k]=v},getAttribute(k){return this.attributes[k]},
+      classList:{toggle(){}},listeners:{},setAttribute(k,v){this.attributes[k]=v},getAttribute(k){return this.attributes[k]},removeAttribute(k){delete this.attributes[k]},focus(){},showModal(){this.open=true},close(){this.open=false},
       addEventListener(k,v){this.listeners[k]=v}});
     return elements.get(id);
   };
-  const document = {getElementById:element,querySelectorAll:()=>[],documentElement:element('html')};
+  const document = {getElementById:element,querySelectorAll:()=>[],querySelector:()=>null,documentElement:element('html'),body:element('body')};
   const window = {document,TOOLS_DATA:catalog,matchMedia:()=>({matches:false,addEventListener(){}}),localStorage:{getItem(){if(blockedStorage)throw Error('blocked');return null},setItem(){if(blockedStorage)throw Error('blocked')}}};
+  window.location={hash:''}; window.history={replaceState(a,b,hash){window.location.hash=hash}};
+  window.listeners={};window.addEventListener=(key,handler)=>window.listeners[key]=handler;
+  vm.runInNewContext(fs.readFileSync(require.resolve('../tools.js'),'utf8'),{window});
   vm.runInNewContext(fs.readFileSync(require.resolve('../app.js'),'utf8'),{window});
   return {window,element};
 }
@@ -70,7 +73,8 @@ test('page initialization, switching, missing snapshot and disabled storage', ()
   element('gdp-year').value='latest'; element('gdp-year').listeners.change();
   assert.doesNotMatch(element('results').innerHTML,/#2/);
   window.switchTool('ip-risk');
-  assert.equal(element('ip-iframe').src,'https://cipda.pages.dev/');
+  assert.equal(element('ip-form').hidden,false);
+  assert.equal(element('query-controls').hidden,true);
   window.toggleTheme(); assert.equal(element('html').attributes['data-theme'],'dark');
   const missing=mockPage(undefined);
   assert.match(missing.element('results').textContent,/数据快照加载失败/);

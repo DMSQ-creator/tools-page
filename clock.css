@@ -1,0 +1,18 @@
+.clock-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.clock-controls label { display: grid; gap: 5px; color: var(--text-soft); font-size: 12px; min-width: 0; }
+.clock-controls input, .clock-controls select, .clock-search input { height: 38px; border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; color: var(--text); background: var(--surface); max-width: 100%; min-width: 0; }
+.clock-search { display: flex; align-items: center; gap: 12px; margin: 16px 0 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-soft); }
+.clock-search input { flex: 1; min-width: 180px; }
+.clock-status { color: var(--text-soft); font-size: 12px; margin: 10px 0; }
+.clock-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 12px; }
+.clock-card { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 16px; min-width: 0; }
+.clock-base { border-color: var(--accent); }
+.clock-card-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.clock-card h2 { font-size: 14px; margin: 0; }
+.clock-card-top span { color: var(--text-soft); font-size: 11px; }
+.clock-time { font-size: 32px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 10px; line-height: 1.4; }
+.clock-time small { font-size: 18px; font-weight: 400; color: var(--text-muted); }
+.clock-card p, .clock-difference { margin: 3px 0; font-size: 12px; color: var(--text-soft); }
+.clock-card-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 12px; font-size: 10px; color: var(--text-muted); overflow-wrap: anywhere; }
+.clock-note { font-size: 11px; color: var(--text-muted); margin: 16px 0; }
+@media(max-width:760px) { .clock-controls { padding: 12px; gap: 10px; } .clock-controls label { flex: 1 1 160px; } .clock-controls input, .clock-controls select { width: 100%; } .clock-grid { grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); } .clock-search label { flex-basis: 100%; } }
