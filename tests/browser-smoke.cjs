@@ -39,6 +39,8 @@ const wait = ms => new Promise(resolve=>setTimeout(resolve,ms));
       const initial=Number($('total').textContent);
       const us=search('US');
       switchTool('gdp');
+      if ($('gdp-year').value !== 'latest' || /#\\d+/.test($('results').textContent)) throw Error('GDP must default to latest without ranks');
+      $('gdp-year').value=String(TOOLS_DATA.gdp.defaultYear);$('gdp-year').dispatchEvent(new Event('change'));
       const gdpCount=Number($('total').textContent);
       const fullChina=Array.from($('results').children).find(row=>row.textContent.includes('中国')).textContent;
       const china=search('CHN');

@@ -66,7 +66,13 @@ test('page initialization, switching, missing snapshot and disabled storage', ()
   const {window,element} = mockPage(catalog,true);
   assert.equal(element('total').textContent,'1');
   window.switchTool('gdp');
+  assert.equal(element('gdp-year').value,'latest');
+  assert.equal(element('total').textContent,'3');
+  assert.doesNotMatch(element('results').innerHTML,/#\d+/);
+  element('gdp-year').value='2024'; element('gdp-year').listeners.change();
   assert.equal(element('total').textContent,'2');
+  window.switchTool('phone-code'); window.switchTool('gdp');
+  assert.equal(element('gdp-year').value,'2024','manual year survives tool switching');
   assert.equal(element('gdp-controls').hidden,false);
   element('search').value='CN'; element('search').listeners.input();
   assert.match(element('results').innerHTML,/#2/);

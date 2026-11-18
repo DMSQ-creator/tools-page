@@ -143,7 +143,7 @@
       if (changed) {
         const state = toolState.get(id);
         $('search').value = state?.query || '';
-        if (isGDP) $('gdp-year').value = state?.year || String(catalog?.gdp.defaultYear || '');
+        if (isGDP) $('gdp-year').value = state?.year || 'latest';
       }
       render();
     }
@@ -200,8 +200,8 @@
     try { root.localStorage.setItem('sidebar-collapsed',String(collapsed)); } catch (_) {}
   });
   if (catalog?.schemaVersion === 1) {
-    $('gdp-year').innerHTML = catalog.gdp.years.map(year => `<option value="${escapeHTML(year)}">${escapeHTML(year)} 年 · 同年排名</option>`).join('') + '<option value="latest">各地最新可用值（非同年）</option>';
-    $('gdp-year').value = String(catalog.gdp.defaultYear);
+    $('gdp-year').innerHTML = '<option value="latest">各地最新可用值（非同年）</option>' + catalog.gdp.years.map(year => `<option value="${escapeHTML(year)}">${escapeHTML(year)} 年 · 同年排名</option>`).join('');
+    $('gdp-year').value = 'latest';
   }
   $('gdp-year').addEventListener('change',render);
   $('search').addEventListener('input',render);
